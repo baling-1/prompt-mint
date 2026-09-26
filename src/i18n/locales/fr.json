@@ -83,6 +83,75 @@
   "language": {
     "select": "Langue"
   },
+  "webhook_replay": {
+    "title": "Rejouement des événements webhook",
+    "subtitle": "Inspectez les événements de contrat en échec et redirigez-les vers votre endpoint.",
+    "connect_wallet": "Connectez votre portefeuille Stellar pour inspecter la file de rejeu de votre webhook.",
+    "register_first": "Aucun webhook n'est encore enregistré pour ce portefeuille. Enregistrez-en un depuis votre profil pour commencer à recevoir des événements.",
+    "loading": "Chargement de la file de rejeu...",
+    "empty": "Rien à rejouer. Toutes les livraisons webhook sont arrivées.",
+    "refresh": "Actualiser",
+    "include_resolved": "Inclure les événements déjà résolus",
+    "acceptance_window": "Une enveloppe stockée est rejouée avec son horodatage d'origine : les récepteurs qui suivent le guide des signatures rejetent donc tout ce qui dépasse {{seconds}} secondes. Rejouez avec un horodatage neuf lorsque cet avertissement apparaît.",
+    "admin_token_label": "Jeton d'API administrateur",
+    "admin_token_placeholder": "ADMIN_API_TOKEN",
+    "admin_token_help": "Le rejeu déclenche une livraison sortante : le serveur le protège donc avec le jeton administrateur. Le jeton reste uniquement en mémoire pour cette session et n'est jamais stocké.",
+    "admin_token_missing": "Saisissez un jeton administrateur avant de rejouer.",
+    "summary": {
+      "pending": "En attente",
+      "replayable": "Rejouables",
+      "stale": "Hors fenêtre",
+      "resolved": "Résolus"
+    },
+    "row": {
+      "dead_lettered": "Livraison échouée le {{date}}",
+      "attempts": "{{count}} tentatives de livraison",
+      "fingerprint": "Empreinte du payload",
+      "delivery_id": "ID de livraison",
+      "age": "Ancienneté",
+      "replay_count": "Rejeux",
+      "last_replayed": "dernier le {{date}}",
+      "last_error": "Dernière erreur",
+      "status_code": "HTTP {{code}}",
+      "payload": "Payload stocké",
+      "warnings_label": "Avant de rejouer",
+      "replay_verbatim": "Rejouer tel quel",
+      "replay_restamp": "Rejouer avec un horodatage neuf"
+    },
+    "badge": {
+      "resolved": "Résolu",
+      "stale": "Hors fenêtre"
+    },
+    "warning": {
+      "stale_event": "Cette enveloppe est plus ancienne que la fenêtre d'acceptation de {{seconds}} secondes. Un rejeu à l'identique conserve l'ancien horodatage : un récepteur qui applique cette fenêtre la rejettera. Utilisez un horodatage neuf.",
+      "already_resolved": "Cet événement a déjà été livré, le rejeu est donc désactivé.",
+      "unparseable_timestamp": "L'horodatage stocké est illisible, son ancienneté ne peut pas être vérifiée.",
+      "subscription_missing": "L'abonnement auquel appartient cet événement n'existe plus. Réenregistrez votre webhook pour le recevoir.",
+      "subscription_inactive": "Cet abonnement est en pause : le rejeu échouera tant qu'il ne sera pas réactivé."
+    },
+    "result": {
+      "success": "Rejeu livré. Le récepteur a accepté l'événement.",
+      "failed": "Échec du rejeu : {{error}}",
+      "unknown_error": "Erreur inattendue."
+    },
+    "preview": {
+      "title": "Aperçu de l'enveloppe",
+      "description": "Construisez le corps et les en-têtes exacts qu'un récepteur verrait, sans rien livrer.",
+      "event_label": "Événement",
+      "build": "Générer l'aperçu",
+      "body": "Corps de la requête",
+      "headers": "En-têtes",
+      "copy": "Copier le corps",
+      "copied": "Copié",
+      "note": "Un aperçu porte toujours un nouvel ID de livraison et un nouvel horodatage. Le rejeu d'une lettre morte renvoie l'enveloppe stockée : c'est pourquoi la file ci-dessus indique l'âge de chaque événement."
+    },
+    "catalog": {
+      "title": "Catalogue des événements",
+      "description": "Événements auxquels un webhook peut s'abonner. C'est le même catalogue que l'API d'enregistrement applique : les deux ne peuvent pas diverger.",
+      "dispatched": "Émis",
+      "undispatched": "Pas encore émis"
+    }
+  },
   "number_format": {
     "xlm_unit": "XLM",
     "stroop_unit": "stroop",

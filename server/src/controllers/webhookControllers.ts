@@ -7,6 +7,13 @@ import { AppError } from "../lib/AppError";
 import { asyncRoute } from "../lib/asyncRoute";
 import { validateWebhookUrl } from "../lib/validateWebhookUrl";
 import { sendTestEvent, replayDeadLetter } from "../services/webhookDispatcher";
+import {
+  REPLAY_ACCEPTANCE_WINDOW_SECONDS,
+  SUBSCRIBABLE_WEBHOOK_EVENTS,
+  WEBHOOK_EVENT_CATALOG,
+  buildReplayPreview,
+  getReplayQueue,
+} from "../services/webhookReplay";
 import { isValidAdminToken } from "../services/adminAuth";
 import { recordAuditEvent } from "../services/auditTrail";
 import { validateBody } from "../middleware/validateRequest";
@@ -14,17 +21,12 @@ import { z } from "zod";
 
 /**
  * Real contract events a creator can subscribe a webhook to (issue #23:
- * "listing sales, transfers, disputes, and version updates").
+ * "listing sales, transfers, disputes, and version updates"). The catalog —
+ * descriptions, sample payloads, and whether the indexer emits each event —
+ * lives in `services/webhookReplay.ts` so the registration allow-list and the
+ * replay console can never drift apart.
  */
-const ALLOWED_EVENTS = [
-  "PromptCreated", // new listing created
-  "PromptPurchased", // listing sales
-  "PromptPriceUpdated", // price changes
-  "LicenseTransferred", // transfers
-  "DisputeOpened", // disputes
-  "DisputeResolved", // disputes
-  "EncryptionRotated", // version updates
-];
+const ALLOWED_EVENTS = SUBSCRIBABLE_WEBHOOK_EVENTS;
 
 // #211 — Zod schemas for webhook request validation
 const RegisterWebhookBody = z.object({
@@ -37,7 +39,13 @@ const WalletAddressBody = z.object({
   walletAddress: z.string().trim().min(1, "walletAddress is required."),
 }).strict();
 
+const PreviewWebhookEventBody = z.object({
+  event: z.string().trim().min(1, "event is required."),
+  data: z.record(z.string(), z.unknown()).optional(),
+}).strict();
+
 export const validateRegisterWebhook = validateBody(RegisterWebhookBody);
+export const validatePreviewWebhookEvent = validateBody(PreviewWebhookEventBody);
 
 export const RegisterWebhook = asyncRoute(async (req, res) => {
   await connectDb();
@@ -246,10 +254,76 @@ export const GetWebhookDeadLetters = asyncRoute(async (req, res) => {
 });
 
 /**
+ * Lists the event catalog the replay console renders: which events a creator
+ * may subscribe to, which the indexer actually emits, and a representative
+ * `data` object for each. Static metadata, so it needs no wallet.
+ */
+export const GetWebhookReplayEvents = asyncRoute(async (_req, res) => {
+  res.json({
+    events: WEBHOOK_EVENT_CATALOG,
+    subscribable: SUBSCRIBABLE_WEBHOOK_EVENTS,
+    acceptanceWindowSeconds: REPLAY_ACCEPTANCE_WINDOW_SECONDS,
+  });
+});
+
+/**
+ * Replay-console read model for one wallet: every dead-lettered event plus a
+ * per-row assessment of whether replaying it can succeed. Extends
+ * `GET /api/webhooks/dead-letters` (raw documents) with the operator-facing
+ * signal the raw rows lack — in particular whether the stored envelope is
+ * already older than the receiver acceptance window documented in
+ * server/docs/webhook-signatures.md, which is the usual reason a replay of an
+ * old event is rejected.
+ */
+export const GetWebhookReplayQueue = asyncRoute(async (req, res) => {
+  await connectDb();
+  const { walletAddress } = req.query;
+
+  if (!walletAddress) {
+    throw new AppError("walletAddress query param is required.", 400, "MISSING_FIELDS");
+  }
+
+  const sub = await WebhookSubscription.findOne({
+    walletAddress: String(walletAddress).toLowerCase(),
+  });
+  if (!sub) {
+    throw new AppError("No webhook registered for this wallet.", 404, "NOT_FOUND");
+  }
+
+  const queue = await getReplayQueue(sub, {
+    includeResolved: req.query.resolved === "true",
+    limit: Number(req.query.limit) || 50,
+  });
+
+  res.json(queue);
+});
+
+/**
+ * Renders the exact envelope and header set a receiver would see for an event
+ * without delivering anything — the dry-run half of the console, used to build
+ * a receiver against a known-good body.
+ */
+export const PreviewWebhookReplay = asyncRoute(async (req, res) => {
+  const { event, data } = req.body as { event: string; data?: Record<string, unknown> };
+
+  try {
+    res.json(buildReplayPreview({ event, data }));
+  } catch (err) {
+    throw new AppError(err instanceof Error ? err.message : "Unknown webhook event.", 400, "INVALID_INPUT");
+  }
+});
+
+/**
  * Re-attempts delivery of a single dead-lettered event. Admin-token gated
  * (rather than wallet-scoped like the other webhook endpoints) since it
  * triggers an outbound HTTP call on demand, same trust boundary as the
  * other admin-only actions in this codebase (see GetPromptReports).
+ *
+ * Body (all optional): `{ "refreshTimestamp": true }` re-stamps the envelope
+ * timestamp with the current time before signing, which is required to
+ * redeliver an event that has aged past a receiver's acceptance window. The
+ * default re-sends the stored envelope verbatim. `deliveryId` is preserved in
+ * both modes so a receiver that already processed the event can dedupe it.
  */
 export const ReplayWebhookDeadLetter = asyncRoute(async (req, res) => {
   await connectDb();
@@ -264,10 +338,20 @@ export const ReplayWebhookDeadLetter = asyncRoute(async (req, res) => {
     throw new AppError("Dead letter id is required.", 400, "MISSING_FIELDS");
   }
 
+  // express.json() leaves req.body undefined for a body-less POST, and this
+  // route predates request validation, so the flag is read defensively.
+  const refreshTimestamp = (req.body as { refreshTimestamp?: unknown } | undefined)?.refreshTimestamp === true;
+
   try {
-    const result = await replayDeadLetter(id);
-    void recordAuditEvent({ action: "admin_action", result: "success", reason: "replay_webhook_dead_letter", clientIp: req.ip, metadata: { deadLetterId: id } });
-    res.status(200).json(result);
+    const result = await replayDeadLetter(id, { refreshTimestamp });
+    void recordAuditEvent({
+      action: "admin_action",
+      result: "success",
+      reason: "replay_webhook_dead_letter",
+      clientIp: req.ip,
+      metadata: { deadLetterId: id, refreshTimestamp },
+    });
+    res.status(200).json({ ...result, replayedAt: new Date().toISOString(), refreshTimestamp });
   } catch (err) {
     throw new AppError(err instanceof Error ? err.message : "Replay failed.", 404, "NOT_FOUND");
   }

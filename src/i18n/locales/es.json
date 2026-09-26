@@ -83,6 +83,75 @@
   "language": {
     "select": "Idioma"
   },
+  "webhook_replay": {
+    "title": "Reproducción de eventos de webhook",
+    "subtitle": "Inspecciona los eventos de contrato que fallaron y vuelve a entregarlos a tu endpoint.",
+    "connect_wallet": "Conecta tu cartera Stellar para inspeccionar la cola de reproducción de tu webhook.",
+    "register_first": "Todavía no hay un webhook registrado para esta cartera. Registra uno desde tu perfil para empezar a recibir eventos.",
+    "loading": "Cargando la cola de reproducción...",
+    "empty": "Nada que reproducir. Todas las entregas de webhook han llegado.",
+    "refresh": "Actualizar",
+    "include_resolved": "Incluir eventos ya resueltos",
+    "acceptance_window": "Un envelope almacenado se reproduce con su marca de tiempo original, por lo que los receptores que siguen la guía de firmas rechazan todo lo que sea más antiguo que {{seconds}} segundos. Reproduce con una marca de tiempo nueva cuando aparezca esa advertencia.",
+    "admin_token_label": "Token de API de administrador",
+    "admin_token_placeholder": "ADMIN_API_TOKEN",
+    "admin_token_help": "Reproducir dispara una entrega saliente, así que el servidor lo protege con el token de administrador. El token se mantiene solo en memoria durante esta sesión y nunca se almacena.",
+    "admin_token_missing": "Introduce un token de administrador antes de reproducir.",
+    "summary": {
+      "pending": "Pendientes",
+      "replayable": "Reproducibles",
+      "stale": "Fuera de ventana",
+      "resolved": "Resueltos"
+    },
+    "row": {
+      "dead_lettered": "Entrega fallida el {{date}}",
+      "attempts": "{{count}} intentos de entrega",
+      "fingerprint": "Huella del payload",
+      "delivery_id": "ID de entrega",
+      "age": "Antigüedad",
+      "replay_count": "Reproducciones",
+      "last_replayed": "última el {{date}}",
+      "last_error": "Último error",
+      "status_code": "HTTP {{code}}",
+      "payload": "Payload almacenado",
+      "warnings_label": "Antes de reproducir",
+      "replay_verbatim": "Reproducir tal cual",
+      "replay_restamp": "Reproducir con marca de tiempo nueva"
+    },
+    "badge": {
+      "resolved": "Resuelto",
+      "stale": "Fuera de ventana"
+    },
+    "warning": {
+      "stale_event": "Este envelope es más antiguo que la ventana de aceptación de {{seconds}} segundos. Reproducirlo tal cual conserva la marca de tiempo antigua, así que un receptor que la aplique lo rechazará: usa una marca de tiempo nueva.",
+      "already_resolved": "Este evento ya se entregó correctamente, por lo que la reproducción está desactivada.",
+      "unparseable_timestamp": "La marca de tiempo almacenada es ilegible, así que no se puede comprobar su antigüedad.",
+      "subscription_missing": "La suscripción a la que pertenece este evento ya no existe. Vuelve a registrar tu webhook para recibirlo.",
+      "subscription_inactive": "Esta suscripción está en pausa, así que la reproducción fallará hasta que se reactive."
+    },
+    "result": {
+      "success": "Reproducción entregada. El receptor aceptó el evento.",
+      "failed": "La reproducción falló: {{error}}",
+      "unknown_error": "Error inesperado."
+    },
+    "preview": {
+      "title": "Vista previa del envelope",
+      "description": "Construye el cuerpo y las cabeceras exactas que vería un receptor, sin entregar nada a ninguna parte.",
+      "event_label": "Evento",
+      "build": "Generar vista previa",
+      "body": "Cuerpo de la petición",
+      "headers": "Cabeceras",
+      "copy": "Copiar cuerpo",
+      "copied": "Copiado",
+      "note": "Una vista previa siempre lleva un ID de entrega y una marca de tiempo nuevos. Reproducir una carta muerta reenvía el envelope almacenado, que es la razón por la que la cola informa de la antigüedad de cada evento."
+    },
+    "catalog": {
+      "title": "Catálogo de eventos",
+      "description": "Eventos a los que puede suscribirse un webhook. Es el mismo catálogo que aplica la API de registro, así que ambos no pueden divergir.",
+      "dispatched": "Enviado",
+      "undispatched": "Aún no se envía"
+    }
+  },
   "number_format": {
     "xlm_unit": "XLM",
     "stroop_unit": "stroop",

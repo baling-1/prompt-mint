@@ -313,9 +313,18 @@ export async function sendTestEvent(
  * unresolved with its error/attempt count updated so it can be retried
  * again later, and it is NOT re-queued into the automatic retry loop —
  * replay is an explicit, one-shot operator action.
+ *
+ * The stored envelope is re-sent byte-for-byte by default, so `deliveryId`
+ * and `timestamp` are preserved and a receiver can still dedupe an event it
+ * already processed. `refreshTimestamp` re-stamps `timestamp` with the current
+ * time before signing: the signature covers the body, so the result stays
+ * internally consistent, and it is the only way to redeliver an event that is
+ * now older than a receiver's acceptance window. `deliveryId` is deliberately
+ * left alone in both modes.
  */
 export async function replayDeadLetter(
   deadLetterId: string,
+  options: { refreshTimestamp?: boolean } = {},
 ): Promise<{ success: boolean; statusCode?: number; error?: string }> {
   const deadLetter = await WebhookDeadLetter.findById(deadLetterId);
   if (!deadLetter) {
@@ -327,7 +336,10 @@ export async function replayDeadLetter(
     throw new Error(`Subscription ${deadLetter.subscriptionId} for dead letter ${deadLetterId} not found`);
   }
 
-  const payload = deadLetter.payload as WebhookPayload;
+  const stored = deadLetter.payload as WebhookPayload;
+  const payload: WebhookPayload = options.refreshTimestamp
+    ? { ...stored, timestamp: new Date().toISOString() }
+    : stored;
 
   try {
     await deliverOnce(subscription.url, subscription.secret, payload);
@@ -340,6 +352,7 @@ export async function replayDeadLetter(
     });
     deadLetter.resolved = true;
     deadLetter.resolvedAt = new Date();
+    trackReplay(deadLetter);
     await deadLetter.save();
     return { success: true };
   } catch (err) {
@@ -357,7 +370,14 @@ export async function replayDeadLetter(
     deadLetter.attempts += 1;
     deadLetter.lastError = message;
     deadLetter.lastStatusCode = statusCode ?? null;
+    trackReplay(deadLetter);
     await deadLetter.save();
     return { success: false, statusCode, error: message };
   }
+}
+
+/** Records replay attempt bookkeeping for the replay console. */
+function trackReplay(deadLetter: { replayCount?: number; lastReplayedAt?: Date | null }): void {
+  deadLetter.replayCount = (deadLetter.replayCount ?? 0) + 1;
+  deadLetter.lastReplayedAt = new Date();
 }

@@ -83,6 +83,75 @@
   "language": {
     "select": "Language"
   },
+  "webhook_replay": {
+    "title": "Webhook Event Replay",
+    "subtitle": "Inspect dead-lettered contract events and redeliver them to your endpoint.",
+    "connect_wallet": "Connect your Stellar wallet to inspect the replay queue for your webhook.",
+    "register_first": "No webhook is registered for this wallet yet. Register one from your profile to start receiving events.",
+    "loading": "Loading replay queue...",
+    "empty": "Nothing to replay. Every webhook delivery has landed.",
+    "refresh": "Refresh",
+    "include_resolved": "Include already-resolved events",
+    "acceptance_window": "A stored envelope is replayed with its original timestamp, so receivers that follow the signature guide reject anything older than {{seconds}} seconds. Replay with a fresh timestamp when that warning appears.",
+    "admin_token_label": "Admin API token",
+    "admin_token_placeholder": "ADMIN_API_TOKEN",
+    "admin_token_help": "Replaying triggers an outbound delivery, so the server gates it behind the admin token. The token is kept in memory for this session and is never stored.",
+    "admin_token_missing": "Enter an admin token before replaying.",
+    "summary": {
+      "pending": "Pending",
+      "replayable": "Replayable",
+      "stale": "Past window",
+      "resolved": "Resolved"
+    },
+    "row": {
+      "dead_lettered": "Dead-lettered {{date}}",
+      "attempts": "{{count}} delivery attempts",
+      "fingerprint": "Payload fingerprint",
+      "delivery_id": "Delivery ID",
+      "age": "Age",
+      "replay_count": "Replays",
+      "last_replayed": "last {{date}}",
+      "last_error": "Last error",
+      "status_code": "HTTP {{code}}",
+      "payload": "Stored payload",
+      "warnings_label": "Before you replay",
+      "replay_verbatim": "Replay verbatim",
+      "replay_restamp": "Replay with fresh timestamp"
+    },
+    "badge": {
+      "resolved": "Resolved",
+      "stale": "Past window"
+    },
+    "warning": {
+      "stale_event": "This envelope is older than the {{seconds}}-second acceptance window. Replaying it verbatim keeps the old timestamp, so a receiver that enforces the window will reject it — use a fresh timestamp instead.",
+      "already_resolved": "This event was already delivered successfully, so replaying it is disabled.",
+      "unparseable_timestamp": "The stored timestamp is unreadable, so its age cannot be checked.",
+      "subscription_missing": "The subscription this event belongs to no longer exists. Re-register your webhook to receive it.",
+      "subscription_inactive": "This subscription is paused, so replay will fail until it is reactivated."
+    },
+    "result": {
+      "success": "Replay delivered. The receiver accepted the event.",
+      "failed": "Replay failed: {{error}}",
+      "unknown_error": "Unexpected error."
+    },
+    "preview": {
+      "title": "Envelope preview",
+      "description": "Build the exact body and headers a receiver would see, without delivering anything anywhere.",
+      "event_label": "Event",
+      "build": "Build preview",
+      "body": "Request body",
+      "headers": "Headers",
+      "copy": "Copy body",
+      "copied": "Copied",
+      "note": "A preview always carries a fresh delivery ID and timestamp. Replaying a dead letter re-sends the stored envelope instead, which is why the queue above reports an age for each event."
+    },
+    "catalog": {
+      "title": "Event catalog",
+      "description": "Events a webhook can subscribe to. This is the same catalog the registration API enforces, so the two cannot drift apart.",
+      "dispatched": "Dispatched",
+      "undispatched": "Not dispatched yet"
+    }
+  },
   "number_format": {
     "xlm_unit": "XLM",
     "stroop_unit": "stroop",

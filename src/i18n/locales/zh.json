@@ -83,6 +83,75 @@
   "language": {
     "select": "语言"
   },
+  "webhook_replay": {
+    "title": "Webhook 事件重放",
+    "subtitle": "查看投递失败的合约事件，并将其重新投递给你的接收端点。",
+    "connect_wallet": "请连接你的 Stellar 钱包，以查看该 webhook 的重放队列。",
+    "register_first": "该钱包尚未注册任何 webhook。请先在个人资料中注册一个，才能开始接收事件。",
+    "loading": "正在加载重放队列……",
+    "empty": "没有需要重放的事件。所有 webhook 投递均已送达。",
+    "refresh": "刷新",
+    "include_resolved": "包含已处理完成的事件",
+    "acceptance_window": "重放会沿用已存储信封的原始时间戳，因此遵循签名规范的接收端会拒绝超过 {{seconds}} 秒的投递。出现该警告时，请使用新的时间戳进行重放。",
+    "admin_token_label": "管理员 API 令牌",
+    "admin_token_placeholder": "ADMIN_API_TOKEN",
+    "admin_token_help": "重放会触发一次对外投递，因此服务端使用管理员令牌加以保护。该令牌仅在本次会话的内存中保存，绝不会被持久化。",
+    "admin_token_missing": "重放前请输入管理员令牌。",
+    "summary": {
+      "pending": "待处理",
+      "replayable": "可重放",
+      "stale": "超出窗口",
+      "resolved": "已完成"
+    },
+    "row": {
+      "dead_lettered": "投递失败于 {{date}}",
+      "attempts": "{{count}} 次投递尝试",
+      "fingerprint": "载荷指纹",
+      "delivery_id": "投递 ID",
+      "age": "已过时长",
+      "replay_count": "重放次数",
+      "last_replayed": "最近一次 {{date}}",
+      "last_error": "最近错误",
+      "status_code": "HTTP {{code}}",
+      "payload": "已存储的载荷",
+      "warnings_label": "重放前请注意",
+      "replay_verbatim": "原样重放",
+      "replay_restamp": "使用新时间戳重放"
+    },
+    "badge": {
+      "resolved": "已完成",
+      "stale": "超出窗口"
+    },
+    "warning": {
+      "stale_event": "该信封已超过 {{seconds}} 秒的接受窗口。原样重放会保留旧时间戳，因此执行该窗口校验的接收端会将其拒绝——请改用新的时间戳。",
+      "already_resolved": "该事件已成功投递，重放功能已禁用。",
+      "unparseable_timestamp": "已存储的时间戳无法解析，因此无法核对其时长。",
+      "subscription_missing": "该事件所属的订阅已不存在。请重新注册 webhook 以接收该事件。",
+      "subscription_inactive": "该订阅已暂停，在重新启用之前重放将会失败。"
+    },
+    "result": {
+      "success": "重放已投递，接收端已接受该事件。",
+      "failed": "重放失败：{{error}}",
+      "unknown_error": "发生意外错误。"
+    },
+    "preview": {
+      "title": "信封预览",
+      "description": "构建接收端将会看到的准确请求体与请求头，全程不向任何地址投递。",
+      "event_label": "事件",
+      "build": "生成预览",
+      "body": "请求体",
+      "headers": "请求头",
+      "copy": "复制请求体",
+      "copied": "已复制",
+      "note": "预览始终带有全新的投递 ID 和时间戳。而重放死信则会原样重新发送已存储的信封——这正是上方队列会为每个事件显示时长的原因。"
+    },
+    "catalog": {
+      "title": "事件目录",
+      "description": "webhook 可订阅的事件。这与注册 API 所校验的目录完全一致，因此两者不会产生偏差。",
+      "dispatched": "已投递",
+      "undispatched": "尚未投递"
+    }
+  },
   "number_format": {
     "xlm_unit": "XLM",
     "stroop_unit": "stroop",

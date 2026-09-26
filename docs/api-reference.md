@@ -153,7 +153,10 @@ The canonical unlock URLs are `/api/auth/challenge` and `/api/prompts/unlock`; o
 | POST | `/api/webhooks/test` | Owner | none -> delivery ID |
 | GET | `/api/webhooks/deliveries` | Owner | none -> `WebhookDelivery[]` |
 | GET | `/api/webhooks/dead-letters` | Owner | none -> dead letters |
-| POST | `/api/webhooks/dead-letters/{id}/replay` | Owner | path ID -> `{success}` |
+| POST | `/api/webhooks/dead-letters/{id}/replay` | Admin | path ID, optional `{refreshTimestamp}` -> `{success,replayedAt}` |
+| GET | `/api/webhooks/replay/events` | Public | none -> event catalog |
+| GET | `/api/webhooks/replay/queue` | Owner | `walletAddress` query -> replay queue with per-row assessments |
+| POST | `/api/webhooks/replay/preview` | Public | `{event,data?}` -> envelope preview, nothing delivered |
 | GET | `/api/notifications` | User | none -> `Notification[]` |
 | PATCH | `/api/notifications/{id}/read` | User | path ID -> `{success}` |
 | GET/PUT | `/api/prompt-order` | Wallet | none / `PromptOrder` -> `PromptOrder` |

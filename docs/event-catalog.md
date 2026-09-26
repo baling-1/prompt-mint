@@ -85,10 +85,13 @@ values are Stellar addresses and amounts (`i128`) are in stroops.
 
 ## Webhook events
 
-Creators can subscribe a webhook to the names allowed in
-[`webhookControllers.ts`](../server/src/controllers/webhookControllers.ts).
-Bodies use the envelope described in [payload versioning](./payload-versioning.md).
-The `data` field is what the emitting code passes to `dispatchEvent`.
+Creators can subscribe a webhook to the names in
+[`server/src/services/webhookReplay.ts`](../server/src/services/webhookReplay.ts),
+which is the single source of truth shared by the registration API and the
+[replay console](./webhook-replay-console.md). That catalog is also served as
+JSON at `GET /api/webhooks/replay/events`. Bodies use the envelope described in
+[payload versioning](./payload-versioning.md). The `data` field is what the
+emitting code passes to `dispatchEvent`.
 
 | Event | Emitted by | `data` fields |
 |---|---|---|

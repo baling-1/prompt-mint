@@ -18,6 +18,7 @@ const ComparePage = lazy(() => import("./pages/compare/page.tsx"));
 const StatusPage = lazy(() => import("./pages/status/page.tsx"));
 const ModerationPage = lazy(() => import("./pages/Moderation.tsx"));
 const ApiKeysPage = lazy(() => import("./pages/settings/ApiKeys.tsx"));
+const WebhookReplayConsolePage = lazy(() => import("./pages/settings/WebhookReplayConsole.tsx"));
 const TransactionHistoryPage = lazy(() => import("./pages/history/page.tsx"));
 const FavoritesPage = lazy(() => import("./pages/favorites/page.tsx"));
 const CollectionDetailPage = lazy(() => import("./pages/collections/page.tsx"));
@@ -146,6 +147,14 @@ function ApplicationShell() {
             element={
               <SuspenseRoute routeName="API Keys">
                 <ApiKeysPage />
+              </SuspenseRoute>
+            }
+          />
+          <Route
+            path="/settings/webhooks/replay"
+            element={
+              <SuspenseRoute routeName="Webhook Replay Console">
+                <WebhookReplayConsolePage />
               </SuspenseRoute>
             }
           />

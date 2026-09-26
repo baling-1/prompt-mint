@@ -1743,16 +1743,35 @@ paths:
     post:
       operationId: replayWebhookDeadLetter
       summary: Replay a dead-letter webhook event
+      description: >-
+        Admin-token gated. Re-sends the stored envelope verbatim by default.
+        Set refreshTimestamp to re-stamp the envelope timestamp with the
+        current time before signing, which is required to redeliver an event
+        that has aged past a receiver's acceptance window. deliveryId is
+        preserved in both modes so a receiver that already processed the event
+        can dedupe it.
       tags: [Webhooks]
+      security:
+        - adminToken: []
       parameters:
         - name: id
           in: path
           required: true
           schema:
             type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshTimestamp:
+                  type: boolean
+                  default: false
       responses:
         "200":
-          description: Replay queued
+          description: Replay attempted
           content:
             application/json:
               schema:
@@ -1760,6 +1779,114 @@ paths:
                 properties:
                   success:
                     type: boolean
+                  statusCode:
+                    type: integer
+                  error:
+                    type: string
+                  replayedAt:
+                    type: string
+                    format: date-time
+                  refreshTimestamp:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/webhooks/replay/events:
+    get:
+      operationId: getWebhookReplayEvents
+      summary: List the webhook event catalog
+      description: >-
+        Events a creator may subscribe to, whether the indexer emits each one,
+        and a representative data object per event. Static metadata.
+      tags: [Webhooks]
+      responses:
+        "200":
+          description: Event catalog
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/WebhookReplayEvent"
+                  subscribable:
+                    type: array
+                    items:
+                      type: string
+                  acceptanceWindowSeconds:
+                    type: integer
+
+  /api/webhooks/replay/queue:
+    get:
+      operationId: getWebhookReplayQueue
+      summary: Get the replay queue for a wallet's webhook
+      description: >-
+        Dead-lettered events for the wallet's subscription, each with an
+        assessment of whether replaying it can succeed.
+      tags: [Webhooks]
+      parameters:
+        - name: walletAddress
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: resolved
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ["true", "false"]
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Replay queue
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookReplayQueue"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/webhooks/replay/preview:
+    post:
+      operationId: previewWebhookReplay
+      summary: Preview the envelope for a webhook event
+      description: >-
+        Builds the exact body and header set a receiver would see for an event
+        without delivering anything. Carries a fresh deliveryId and timestamp;
+        it is not what a dead-letter replay re-sends.
+      tags: [Webhooks]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [event]
+              properties:
+                event:
+                  type: string
+                data:
+                  type: object
+      responses:
+        "200":
+          description: Envelope preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WebhookReplayPreview"
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   # ─── Notifications ─────────────────────────────────────────────────────────
   /api/notifications:
@@ -2433,18 +2560,191 @@ components:
       properties:
         _id:
           type: string
-        webhookId:
+        subscriptionId:
           type: string
         event:
           type: string
         payload:
-          type: object
-        error:
+          $ref: "#/components/schemas/WebhookPayload"
+        attempts:
+          type: integer
+        lastError:
           type: string
-        failedAt:
+          nullable: true
+        lastStatusCode:
+          type: integer
+          nullable: true
+        resolved:
+          type: boolean
+        resolvedAt:
           type: string
           format: date-time
-        retryCount:
+          nullable: true
+        replayCount:
+          type: integer
+        lastReplayedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    WebhookPayload:
+      type: object
+      properties:
+        version:
+          type: integer
+        schemaVersion:
+          type: string
+        event:
+          type: string
+        deliveryId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        data:
+          type: object
+
+    WebhookReplayEvent:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        dispatched:
+          type: boolean
+          description: Whether the indexer currently emits this event.
+        subscribable:
+          type: boolean
+          description: Whether a creator may list this event when registering a subscription.
+        sampleData:
+          type: object
+
+    WebhookReplayAssessment:
+      type: object
+      description: >-
+        Per-row verdict on whether replaying a dead letter can succeed. The
+        timestamp of a stored envelope never changes on a verbatim replay, so a
+        dead letter older than acceptanceWindowSeconds is flagged `stale`:
+        a receiver following server/docs/webhook-signatures.md is expected to
+        reject it unless the replay is re-stamped.
+      properties:
+        deliveryId:
+          type: string
+        event:
+          type: string
+        originalTimestamp:
+          type: string
+        ageSeconds:
+          type: integer
+          nullable: true
+        fingerprint:
+          type: string
+          description: SHA-256 of the canonical payload JSON; unchanged by a verbatim replay.
+        replayable:
+          type: boolean
+        stale:
+          type: boolean
+        warnings:
+          type: array
+          items:
+            type: string
+            enum: [already_resolved, stale_event, unparseable_timestamp, subscription_missing, subscription_inactive]
+
+    WebhookReplayQueueItem:
+      type: object
+      properties:
+        id:
+          type: string
+        event:
+          type: string
+        attempts:
+          type: integer
+        lastError:
+          type: string
+          nullable: true
+        lastStatusCode:
+          type: integer
+          nullable: true
+        resolved:
+          type: boolean
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        replayCount:
+          type: integer
+        lastReplayedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        payload:
+          $ref: "#/components/schemas/WebhookPayload"
+        subscription:
+          type: object
+          nullable: true
+          description: Delivery target for this dead letter. Never contains the subscription secret.
+          properties:
+            id:
+              type: string
+            url:
+              type: string
+            active:
+              type: boolean
+        replay:
+          $ref: "#/components/schemas/WebhookReplayAssessment"
+
+    WebhookReplayQueue:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            pending:
+              type: integer
+            resolved:
+              type: integer
+            replayable:
+              type: integer
+            stale:
+              type: integer
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/WebhookReplayQueueItem"
+        acceptanceWindowSeconds:
+          type: integer
+
+    WebhookReplayPreview:
+      type: object
+      description: >-
+        The exact envelope and header set a receiver would see for an event,
+        built without contacting anything. The preview always carries a fresh
+        deliveryId and timestamp; replaying a dead letter re-sends the stored
+        envelope instead.
+      properties:
+        event:
+          type: string
+        schemaVersion:
+          type: string
+        payload:
+          $ref: "#/components/schemas/WebhookPayload"
+        body:
+          type: string
+          description: Exact request body a receiver would verify.
+        headers:
+          type: object
+          additionalProperties:
+            type: string
+        acceptanceWindowSeconds:
           type: integer
 
     # ── Notifications ─────────────────────────────────────────────────────────

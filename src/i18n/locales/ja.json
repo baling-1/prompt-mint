@@ -83,6 +83,75 @@
   "language": {
     "select": "言語"
   },
+  "webhook_replay": {
+    "title": "Webhook イベント再生",
+    "subtitle": "配信に失敗したコントラクトイベントを確認し、エンドポイントへ再配信します。",
+    "connect_wallet": "Stellar ウォレットを接続すると、webhook の再生キューを確認できます。",
+    "register_first": "このウォレットにはまだ webhook が登録されていません。プロフィールから登録するとイベントを受信しくなります。",
+    "loading": "再生キューを読み込んでいます……",
+    "empty": "再生するイベントはありません。すべての webhook 配信は届いています。",
+    "refresh": "更新",
+    "include_resolved": "解決済みのイベントを含める",
+    "acceptance_window": "保存されたエンベロープは元のタイムスタンプのまま再生されるため、署名ガイドに従う受信側は {{seconds}} 秒より古い配信を拒否します。この警告が表示された場合は、新しいタイムスタンプで再生してください。",
+    "admin_token_label": "管理者 API トークン",
+    "admin_token_placeholder": "ADMIN_API_TOKEN",
+    "admin_token_help": "再生は外向きの配信を伴うため、サーバーは管理者トークンで保護しています。トークンはこのセッションのメモリ内にのみ保持され、保存はされません。",
+    "admin_token_missing": "再生する前に管理者トークンを入力してください。",
+    "summary": {
+      "pending": "未対応",
+      "replayable": "再生可能",
+      "stale": "ウィンドウ超過",
+      "resolved": "解決済み"
+    },
+    "row": {
+      "dead_lettered": "{{date}} に配信失敗",
+      "attempts": "配信試行 {{count}} 回",
+      "fingerprint": "ペイロードのフィンガープリント",
+      "delivery_id": "配信 ID",
+      "age": "経過時間",
+      "replay_count": "再生回数",
+      "last_replayed": "最終: {{date}}",
+      "last_error": "直近のエラー",
+      "status_code": "HTTP {{code}}",
+      "payload": "保存されたペイロード",
+      "warnings_label": "再生する前に",
+      "replay_verbatim": "そのまま再生",
+      "replay_restamp": "新しいタイムスタンプで再生"
+    },
+    "badge": {
+      "resolved": "解決済み",
+      "stale": "ウィンドウ超過"
+    },
+    "warning": {
+      "stale_event": "このエンベロープは {{seconds}} 秒の受け入れウィンドウを超えています。そのまま再生すると古いタイムスタンプが維持されるため、ウィンドウを検証する受信側には拒否されます。新しいタイムスタンプを使用してください。",
+      "already_resolved": "このイベントはすでに正常に配信済みのため、再生は無効になっています。",
+      "unparseable_timestamp": "保存されたタイムスタンプが読み取れないため、経過時間を確認できません。",
+      "subscription_missing": "このイベントの購読は存在しません。受信するには webhook を再登録してください。",
+      "subscription_inactive": "この購読は一時停止中のため、再有効化するまで再生は失敗します。"
+    },
+    "result": {
+      "success": "再生を配信しました。受信側がイベントを受理しました。",
+      "failed": "再生に失敗しました: {{error}}",
+      "unknown_error": "予期しないエラーが発生しました。"
+    },
+    "preview": {
+      "title": "エンベロープのプレビュー",
+      "description": "何も配信せずに、受信側が見るはずの本文とヘッダーを正確に構築します。",
+      "event_label": "イベント",
+      "build": "プレビューを生成",
+      "body": "リクエストボディ",
+      "headers": "ヘッダー",
+      "copy": "ボディをコピー",
+      "copied": "コピー済み",
+      "note": "プレビューには常に新しい配信 ID とタイムスタンプが含まれます。一方、デッドレターの再生は保存済みのエンベロープをそのまま再送するため、上のキューが各イベントの経過時間を表示しています。"
+    },
+    "catalog": {
+      "title": "イベントカタログ",
+      "description": "webhook が購読できるイベントです。登録 API が適用するカタログと同一のため、両者が乖離することはありません。",
+      "dispatched": "配信中",
+      "undispatched": "未配信"
+    }
+  },
   "number_format": {
     "xlm_unit": "XLM",
     "stroop_unit": "ストループ",

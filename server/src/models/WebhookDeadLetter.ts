@@ -45,6 +45,16 @@ const webhookDeadLetterSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    /** How many times an operator has replayed this event. Replay history for
+     * the replay console; not part of the original #97 dead-letter shape. */
+    replayCount: {
+      type: Number,
+      default: 0,
+    },
+    lastReplayedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );
